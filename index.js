@@ -42,7 +42,7 @@ app.delete('/api/persons/:id', (request, response, next) => {
 })
 
 app.post('/api/persons', (request, response) => {
-	const { personName, personNumber } = request.body;
+	const { name, number } = request.body;
 
 	if(!request.body){
 		response.status(400).json({
@@ -50,15 +50,15 @@ app.post('/api/persons', (request, response) => {
 		}).end();
 	}
 
-	if(!personName || !personNumber){
+	if(!name || !number){
 		return response.status(400).json({
 			error: "must have name and number!",
 		}).end();
 	}
 
 	const newPerson = new Person({
-		name: personName,
-		number: personNumber
+		name: name,
+		number: number
 	});
 
 	newPerson.save().then(() => {
