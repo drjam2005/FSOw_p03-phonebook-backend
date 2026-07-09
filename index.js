@@ -11,7 +11,7 @@ morgan.token('body', (req) => { return JSON.stringify(req.body)});
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'));
 
 app.get('/', (request, response) => {
-	response.send('hi');
+	response.send(` <h1> Hello, World!  </h1> `);
 });
 
 app.get('/api/persons', (request, response) => {
