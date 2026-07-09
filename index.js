@@ -20,35 +20,35 @@ app.get('/api/persons', (request, response) => {
 	});
 });
 
-app.get('/api/persons/:id', (request, response) => {
+app.get('/api/persons/:id', (request, response, next) => {
 	const id = request.params.id;
-	Person.findById(id).then(person => {
-		response.json(person).exit();
-	}).catch(error => {
-		response.status(404).json({error: `${error}`}).end();
-	})
+	Person.findById(id)
+		.then(person => {
+			if(!person)
+				response.status(404).end();
+			else
+				response.json(person).end();
+		})
+		.catch(error => next(error))
 });
 
-app.delete('/api/persons/:id', (request, response) => {
+app.delete('/api/persons/:id', (request, response, next) => {
 	const id = request.params.id;
-	Person.findByIdAndDelete(id).then(res => {
-		response.status(204).end();
-	}).catch(error => {
-		response.status(404).json({error: `${error}`}).end();
-	});
+	Person.findByIdAndDelete(id)
+		.then(res => {
+			response.status(204).end();
+		})
+		.catch(error => next(error));
 })
 
 app.post('/api/persons', (request, response) => {
-	const body = request.body;
+	const { personName, personNumber } = request.body;
 
-	if(!body){
+	if(!request.body){
 		response.status(400).json({
 			error: "must have request body!"
 		}).end();
 	}
-
-	const personName = body.name;
-	const personNumber = body.number;
 
 	if(!personName || !personNumber){
 		return response.status(400).json({
@@ -63,11 +63,37 @@ app.post('/api/persons', (request, response) => {
 
 	newPerson.save().then(() => {
 		return response.json(newPerson);
-	}).catch(error => {
-		return response.status(404).send({
-			error: 'unknown endpoint'
-		});
 	});
+});
+
+app.put('/api/persons/:id', (request, response, next) => {
+	const { name, number } = request.body;
+	const id = request.params.id;
+
+
+	if(!name || !number){
+		return response.status(400).json({
+			error: "must have name and number!",
+		}).end();
+	}
+
+	Person.findById(id)
+		.then(person => {
+			if (!person) {
+				return response.status(404).end();
+			}
+
+			person.name = name;
+			person.number = number;
+
+			return person.save();
+		})
+		.then(updatedPerson => {
+			if (updatedPerson) {
+				response.json(updatedPerson);
+			}
+		})
+		.catch(error => next(error));
 });
 
 
@@ -83,12 +109,25 @@ app.get('/info', (request, response) => {
 	});
 });
 
+const errorHandler = (error, request, response, next) => {
+	console.error(error.message)
+
+	if(error.name === 'CastError') {
+		return response.status(400).send({
+			error: 'malformed id'
+		});
+	}
+
+	next(error);
+}
+
 const unknownEndpoint = (request, response, next) => {
 	response.status(404).send({error: 'unknown endpoint'});
 	next();
 }
 
 app.use(unknownEndpoint);
+app.use(errorHandler);
 
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
