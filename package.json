@@ -9,7 +9,8 @@
 	"scripts": {
 		"build:ui": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend",
 		"deploy:full": "npm run build:ui && git add . && git commit && git push",
-		"start": "node index.js"
+		"start": "node index.js",
+		"build:start": "rm -rf dist && cd ../frontend && npm run build && cp -r dist ../backend && cd ../backend/ && node index.js"
 	},
 	"dependencies": {
 		"dotenv": "^17.4.2",
